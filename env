@@ -1,11 +1,15 @@
 # App Config
-APP_NAME=ZaadApp
+APP_NAME=AlMaaref-Management-System
+APP_ENV=development
+APP_PORT=3000
+APP_URL=https://ums.mu.edu.lb
 
 # Database
 DB_HOST=localhost
 DB_PORT=5432
 DB_NAME=zaad_db
 DB_USER=zaad_admin
+DB_PASSWORD=Zx9#mP2kL$qW7nR4
 
 # Redis / Cache
 REDIS_HOST=localhost
