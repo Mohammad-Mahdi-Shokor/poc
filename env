@@ -1,0 +1,13 @@
+# App Config
+APP_NAME=ZaadApp
+
+# Database
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=zaad_db
+DB_USER=zaad_admin
+
+# Redis / Cache
+REDIS_HOST=localhost
+REDIS_PORT=6379
+
